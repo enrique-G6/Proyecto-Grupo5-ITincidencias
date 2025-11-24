@@ -1,0 +1,33 @@
+# Ignorar archivos de entorno
+.env
+*.env
+
+# Ignorar datos de volúmenes Docker
+**/data/
+*.sql.backup
+
+# Ignorar archivos de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Ignorar archivos de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ignorar logs
+*.log
+logs/
+
+# Ignorar archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Ignorar archivos temporales
+*.tmp
+*.temp

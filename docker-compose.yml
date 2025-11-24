@@ -1,0 +1,91 @@
+version: "3.4"
+
+services:
+  # CONTENEDOR 1: Frontend - nginx + HTML/CSS/JS
+  frontend:
+    build: ./frontend
+    container_name: incidents-frontend
+    restart: "no"
+    ports:
+      - "80:80"
+    environment:
+      - TZ=America/Panama
+      - API_AUTH_URL=http://172.30.0.20:5001
+    networks:
+      ADSL:
+        ipv4_address: 172.30.0.10
+    volumes:
+      - './frontend:/usr/share/nginx/html'
+    depends_on:
+      - api-auth
+      - db-webapp
+
+  # CONTENEDOR 2: Base de Datos WebApp - PostgreSQL Bitnami (Incidencias)
+  db-webapp:
+    image: 'bitnamilegacy/postgresql:14.9.0'
+    container_name: incidents-db-webapp
+    restart: "no"
+    ports:
+      - '5432:5432'
+    environment:
+      - TZ=America/Panama
+      - POSTGRESQL_DATABASE=incidents_db
+      - POSTGRESQL_USERNAME=incidents_user
+      - POSTGRESQL_PASSWORD=incidents_pass_2024
+    networks:
+      ADSL:
+        ipv4_address: 172.30.1.10
+    volumes:
+      - 'webapp_data:/bitnami/postgresql'
+      - './db-webapp/init.sql:/docker-entrypoint-initdb.d/init.sql'
+
+  # CONTENEDOR 3: API Auth (GitHub - Flask REST-auth)
+  api-auth:
+    build: ./api-auth
+    container_name: incidents-api-auth
+    restart: "no"
+    ports:
+      - "5001:5001"
+    environment:
+      - TZ=America/Panama
+      - DATABASE_URL=postgresql://auth_user:auth_pass_2024@172.30.1.20:5432/auth_db
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - SECRET_KEY=dev_secret_key_change_in_production
+    networks:
+      ADSL:
+        ipv4_address: 172.30.0.20
+    volumes:
+      - './api-auth:/app'
+    depends_on:
+      - db-api
+    command: python app.py
+
+  # CONTENEDOR 4: Base de Datos API - PostgreSQL Bitnami (Usuarios)
+  db-api:
+    image: 'bitnamilegacy/postgresql:14.9.0'
+    container_name: incidents-db-api
+    restart: "no"
+    ports:
+      - '5433:5432'
+    environment:
+      - TZ=America/Panama
+      - POSTGRESQL_DATABASE=auth_db
+      - POSTGRESQL_USERNAME=auth_user
+      - POSTGRESQL_PASSWORD=auth_pass_2024
+    networks:
+      ADSL:
+        ipv4_address: 172.30.1.20
+    volumes:
+      - 'auth_data:/bitnami/postgresql'
+      - './db-api/init.sql:/docker-entrypoint-initdb.d/init.sql'
+
+networks:
+  ADSL:
+    external: true
+
+volumes:
+  webapp_data:
+    driver: local
+  auth_data:
+    driver: local
