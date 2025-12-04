@@ -1,3 +1,4 @@
+cat > frontend/js/app.js << 'EOFJS'
 // Configuración global
 const API_AUTH_URL = 'http://localhost:5001/api';
 
@@ -6,6 +7,7 @@ function checkAuth() {
     const user = localStorage.getItem('currentUser');
     const currentPath = window.location.pathname;
     
+    // Si no hay usuario y no está en la página de login
     if (!user && currentPath !== '/index.html' && currentPath !== '/') {
         window.location.href = '/index.html';
         return null;
@@ -15,8 +17,10 @@ function checkAuth() {
 
 // Cerrar sesión
 function logout() {
-    localStorage.clear();
-    window.location.href = '/index.html';
+    if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+        localStorage.clear();
+        window.location.href = '/index.html';
+    }
 }
 
 // Obtener usuario actual
@@ -28,3 +32,6 @@ function getCurrentUser() {
 function showMessage(message, type = 'info') {
     console.log(`[${type}] ${message}`);
 }
+
+console.log('✅ Sistema de Incidencias IT - Cargado correctamente');
+EOFJS
