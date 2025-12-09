@@ -61,7 +61,7 @@
                         <p class="card-text text-muted">
                             Reporta un nuevo problema técnico o solicitud de soporte
                         </p>
-                        <button class="btn btn-primary btn-lg w-100" onclick="alert('Funcionalidad en desarrollo - 50% restante del proyecto')">
+                        <button class="btn btn-primary btn-lg w-100" onclick="window.location.href='crear-incidencia.html'">
                             <i class="bi bi-plus-lg"></i> Nueva Incidencia
                         </button>
                     </div>
@@ -79,7 +79,7 @@
                         <p class="card-text text-muted">
                             Consulta el estado de tus tickets reportados
                         </p>
-                        <button class="btn btn-success btn-lg w-100" onclick="alert('Funcionalidad en desarrollo - 50% restante del proyecto')">
+                        <button class="btn btn-success btn-lg w-100" onclick="window.location.href='listar-incidencias.html'">
                             <i class="bi bi-list-ul"></i> Ver Listado
                         </button>
                     </div>
@@ -97,24 +97,12 @@
                         <p class="card-text text-muted">
                             Visualiza métricas e indicadores de incidencias
                         </p>
-                        <button class="btn btn-warning btn-lg w-100" onclick="alert('Funcionalidad en desarrollo - 50% restante del proyecto')">
+                        <button class="btn btn-warning btn-lg w-100" onclick="alert('Próximamente: Dashboard con gráficos Chart.js')">
                             <i class="bi bi-graph-up"></i> Ver Estadísticas
                         </button>
                     </div>
                 </div>
             </div>
-        </div>
-
-                     <div class="alert alert-info mb-0">
-                            <strong><i class="bi bi-lightbulb"></i> Proyecto Académico:</strong><br>
-                            Universidad Tecnológica de Panamá<br>
-                            Metodología para el Desarrollo de Sistemas - Grupo 5 (1M3215)<br>
-                            <strong>Equipo:</strong> Enrique Gonzalez, Steven Van Lewin, Kristin Agüero
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- Información técnica -->
         <div class="row mt-4 mb-5">
@@ -131,28 +119,28 @@
                                 <div class="p-3 border rounded">
                                     <i class="bi bi-window text-primary" style="font-size: 2rem;"></i>
                                     <h6 class="mt-2">Frontend</h6>
-                                    <small class="text-muted">nginx + Bootstrap 5</small>
+                                    <small class="text-muted">nginx + Bootstrap 5<br>172.30.0.10:80</small>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="p-3 border rounded">
                                     <i class="bi bi-server text-success" style="font-size: 2rem;"></i>
                                     <h6 class="mt-2">API Auth</h6>
-                                    <small class="text-muted">Python Flask</small>
+                                    <small class="text-muted">Python Flask<br>172.30.0.20:5001</small>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="p-3 border rounded">
                                     <i class="bi bi-database text-info" style="font-size: 2rem;"></i>
                                     <h6 class="mt-2">DB WebApp</h6>
-                                    <small class="text-muted">PostgreSQL 14</small>
+                                    <small class="text-muted">PostgreSQL 14<br>172.30.1.10:5432</small>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="p-3 border rounded">
                                     <i class="bi bi-database text-warning" style="font-size: 2rem;"></i>
                                     <h6 class="mt-2">DB API</h6>
-                                    <small class="text-muted">PostgreSQL 14</small>
+                                    <small class="text-muted">PostgreSQL 14<br>172.30.1.20:5432</small>
                                 </div>
                             </div>
                         </div>
@@ -176,6 +164,3 @@
     </script>
 </body>
 </html>
-EOFDASH
-
-echo "✅ dashboard.html creado"
