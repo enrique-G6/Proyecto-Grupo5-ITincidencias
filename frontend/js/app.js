@@ -1,4 +1,3 @@
-cat > frontend/js/app.js << 'EOFJS'
 // Configuración global
 const API_AUTH_URL = 'http://localhost:5001/api';
 
@@ -34,4 +33,3 @@ function showMessage(message, type = 'info') {
 }
 
 console.log('✅ Sistema de Incidencias IT - Cargado correctamente');
-EOFJS
