@@ -140,15 +140,74 @@
         </div>
     </div>
 
-    <!-- Modal de detalle -->
-    <div class="modal fade" id="incidentModal" tabindex="-1">
+    <!-- Modal de EDITAR (Solo Admin) -->
+    <div class="modal fade" id="editModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle"></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-pencil-square"></i> Editar Incidencia
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body" id="modalBody"></div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editIncidentId">
+                        
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Título</strong></label>
+                            <input type="text" class="form-control" id="editTitle" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Descripción</strong></label>
+                            <textarea class="form-control" id="editDescription" rows="4"></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Estado</strong></label>
+                                <select class="form-select" id="editStatus" required>
+                                    <!-- Opciones cargadas dinámicamente -->
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Prioridad</strong></label>
+                                <select class="form-select" id="editPriority" required>
+                                    <!-- Opciones cargadas dinámicamente -->
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> 
+                            <strong>Usuario:</strong> <span id="editUsername"></span><br>
+                            <strong>Creada:</strong> <span id="editCreatedAt"></span>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="saveChanges()">
+                        <i class="bi bi-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de detalle (solo lectura) -->
+    <div class="modal fade" id="viewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="viewModalTitle"></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="viewModalBody"></div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
@@ -170,18 +229,15 @@
         }
 
         let allIncidents = [];
+        let allStatuses = [];
+        let allPriorities = [];
 
-        // ═══════════════════════════════════════════════════════════════
-        // FUNCIÓN PRINCIPAL: Cargar incidencias con filtro por ROLE
-        // ═══════════════════════════════════════════════════════════════
+        // Cargar incidencias con filtro por ROLE
         async function loadIncidents() {
             try {
                 const currentUser = localStorage.getItem('currentUser');
                 const userRole = localStorage.getItem('userRole');
                 
-                // ✅ LÓGICA DE ROLES:
-                // - Si es admin: cargar TODAS las incidencias
-                // - Si es user: filtrar por username
                 let url = `${API_AUTH_URL}/incidents`;
                 if (userRole !== 'admin') {
                     url += `?username=${currentUser}`;
@@ -238,9 +294,12 @@
             }
         }
 
-        // Renderizar incidencias
+        // ═══════════════════════════════════════════════════════════════
+        // RENDERIZAR INCIDENCIAS - CON PERMISOS POR ROL
+        // ═══════════════════════════════════════════════════════════════
         function renderIncidents(incidents) {
             const container = document.getElementById('incidentsList');
+            const userRole = localStorage.getItem('userRole') || 'user';
             
             if (incidents.length === 0) {
                 container.innerHTML = `
@@ -274,13 +333,45 @@
                     'Crítica': 'bg-danger'
                 }[incident.priority.name] || 'bg-secondary';
                 
+                // ✅ LÓGICA DE PERMISOS:
+                // - Admin: ve botones Editar y Eliminar
+                // - Usuario normal: SOLO ve botón "Ver Detalle"
+                let actionButtons = '';
+                
+                if (userRole === 'admin') {
+                    // ✅ ADMIN: Todos los botones
+                    actionButtons = `
+                        <button class="btn btn-sm btn-outline-success mb-2 w-100" 
+                                onclick="editIncident(${incident.id})">
+                            <i class="bi bi-pencil"></i> Editar
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary mb-2 w-100" 
+                                onclick="viewIncident(${incident.id})">
+                            <i class="bi bi-eye"></i> Ver Detalle
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger w-100" 
+                                onclick="deleteIncident(${incident.id})">
+                            <i class="bi bi-trash"></i> Eliminar
+                        </button>`;
+                } else {
+                    // ❌ USUARIO NORMAL: Solo Ver Detalle
+                    actionButtons = `
+                        <button class="btn btn-sm btn-outline-primary w-100" 
+                                onclick="viewIncident(${incident.id})">
+                            <i class="bi bi-eye"></i> Ver Detalle
+                        </button>
+                        <div class="text-muted text-center mt-2" style="font-size: 0.75rem;">
+                            <i class="bi bi-info-circle"></i> Solo lectura
+                        </div>`;
+                }
+                
                 card.innerHTML = `
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-1 text-center">
                                 <h2 class="text-muted">#${incident.id}</h2>
                             </div>
-                            <div class="col-md-7">
+                            <div class="col-md-6">
                                 <h5>${incident.title}</h5>
                                 <p class="text-muted">${incident.description ? incident.description.substring(0, 100) + '...' : 'Sin descripción'}</p>
                                 <small class="text-muted">
@@ -292,15 +383,8 @@
                                 <span class="badge ${statusBadge} mb-2 w-100">${incident.status.name}</span>
                                 <span class="badge ${priorityBadge} w-100">${incident.priority.name}</span>
                             </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-sm btn-outline-primary mb-2 w-100" 
-                                        onclick="viewIncident(${incident.id})">
-                                    <i class="bi bi-eye"></i> Ver
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger w-100" 
-                                        onclick="deleteIncident(${incident.id})">
-                                    <i class="bi bi-trash"></i> Eliminar
-                                </button>
+                            <div class="col-md-3">
+                                ${actionButtons}
                             </div>
                         </div>
                     </div>`;
@@ -309,34 +393,138 @@
             });
         }
 
-        // Ver detalle
-        async function viewIncident(id) {
+        // EDITAR (Solo Admin)
+        async function editIncident(id) {
+            const userRole = localStorage.getItem('userRole');
+            
+            // Verificar permisos
+            if (userRole !== 'admin') {
+                alert('⚠️ Solo el administrador puede editar incidencias');
+                return;
+            }
+            
             try {
                 const response = await fetch(`${API_AUTH_URL}/incidents/${id}`);
+                if (!response.ok) throw new Error('Error al cargar incidencia');
+                
                 const incident = await response.json();
                 
-                document.getElementById('modalTitle').textContent = `#${incident.id} - ${incident.title}`;
-                document.getElementById('modalBody').innerHTML = `
-                    <p><strong>Descripción:</strong> ${incident.description || 'Sin descripción'}</p>
-                    <p><strong>Usuario:</strong> ${incident.username}</p>
-                    <p><strong>Estado:</strong> <span class="badge bg-info">${incident.status.name}</span></p>
-                    <p><strong>Prioridad:</strong> <span class="badge bg-warning">${incident.priority.name}</span></p>
-                    <p><strong>Creada:</strong> ${new Date(incident.created_at).toLocaleString()}</p>`;
+                document.getElementById('editIncidentId').value = incident.id;
+                document.getElementById('editTitle').value = incident.title;
+                document.getElementById('editDescription').value = incident.description || '';
+                document.getElementById('editStatus').value = incident.status.id;
+                document.getElementById('editPriority').value = incident.priority.id;
+                document.getElementById('editUsername').textContent = incident.username;
+                document.getElementById('editCreatedAt').textContent = new Date(incident.created_at).toLocaleString();
                 
-                new bootstrap.Modal(document.getElementById('incidentModal')).show();
+                new bootstrap.Modal(document.getElementById('editModal')).show();
+                
+            } catch (error) {
+                alert('Error al cargar incidencia: ' + error.message);
+            }
+        }
+
+        // Guardar cambios (Solo Admin)
+        async function saveChanges() {
+            const userRole = localStorage.getItem('userRole');
+            
+            if (userRole !== 'admin') {
+                alert('⚠️ Solo el administrador puede editar incidencias');
+                return;
+            }
+            
+            try {
+                const id = document.getElementById('editIncidentId').value;
+                const data = {
+                    title: document.getElementById('editTitle').value,
+                    description: document.getElementById('editDescription').value,
+                    status_id: parseInt(document.getElementById('editStatus').value),
+                    priority_id: parseInt(document.getElementById('editPriority').value)
+                };
+                
+                const response = await fetch(`${API_AUTH_URL}/incidents/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) throw new Error('Error al actualizar');
+                
+                bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                
+                alert('✅ Incidencia actualizada exitosamente');
+                loadIncidents();
+                
             } catch (error) {
                 alert('Error: ' + error.message);
             }
         }
 
-        // Eliminar
+        // Ver detalle (Todos pueden ver)
+        async function viewIncident(id) {
+            try {
+                const response = await fetch(`${API_AUTH_URL}/incidents/${id}`);
+                const incident = await response.json();
+                
+                const userRole = localStorage.getItem('userRole');
+                const roleInfo = userRole === 'admin' 
+                    ? '<span class="badge bg-success">Administrador</span>' 
+                    : '<span class="badge bg-secondary">Solo lectura</span>';
+                
+                document.getElementById('viewModalTitle').textContent = `#${incident.id} - ${incident.title}`;
+                document.getElementById('viewModalBody').innerHTML = `
+                    <div class="mb-3">
+                        <strong>Descripción:</strong>
+                        <p class="mt-2">${incident.description || 'Sin descripción'}</p>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Usuario:</strong> ${incident.username}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Tu permiso:</strong> ${roleInfo}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Estado:</strong> 
+                            <span class="badge bg-info">${incident.status.name}</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Prioridad:</strong> 
+                            <span class="badge bg-warning">${incident.priority.name}</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Creada:</strong> ${new Date(incident.created_at).toLocaleString()}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Actualizada:</strong> ${new Date(incident.updated_at).toLocaleString()}
+                        </div>
+                    </div>`;
+                
+                new bootstrap.Modal(document.getElementById('viewModal')).show();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Eliminar (Solo Admin)
         async function deleteIncident(id) {
-            if (!confirm('¿Eliminar esta incidencia?')) return;
+            const userRole = localStorage.getItem('userRole');
+            
+            if (userRole !== 'admin') {
+                alert('⚠️ Solo el administrador puede eliminar incidencias');
+                return;
+            }
+            
+            if (!confirm('¿Estás seguro de eliminar esta incidencia?')) return;
             
             try {
                 const response = await fetch(`${API_AUTH_URL}/incidents/${id}`, { method: 'DELETE' });
                 if (response.ok) {
-                    alert('Incidencia eliminada');
+                    alert('✅ Incidencia eliminada');
                     loadIncidents();
                 }
             } catch (error) {
@@ -355,14 +543,20 @@
                 const statusData = await statusRes.json();
                 const priorityData = await priorityRes.json();
                 
-                const statusSelect = document.getElementById('filterStatus');
+                const filterStatusSelect = document.getElementById('filterStatus');
+                const editStatusSelect = document.getElementById('editStatus');
+                
                 statusData.statuses.forEach(s => {
-                    statusSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+                    filterStatusSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+                    editStatusSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
                 });
                 
-                const prioritySelect = document.getElementById('filterPriority');
+                const filterPrioritySelect = document.getElementById('filterPriority');
+                const editPrioritySelect = document.getElementById('editPriority');
+                
                 priorityData.priorities.forEach(p => {
-                    prioritySelect.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+                    filterPrioritySelect.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+                    editPrioritySelect.innerHTML += `<option value="${p.id}">${p.name}</option>`;
                 });
             } catch (error) {
                 console.error('Error:', error);
