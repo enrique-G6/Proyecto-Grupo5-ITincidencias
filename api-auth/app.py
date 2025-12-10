@@ -30,6 +30,7 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False, index=True)
     email = db.Column(db.String(100), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
+    role = db.Column(db.String(20), default='user')  # ← AGREGADO: Campo role
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     def set_password(self, password):
@@ -46,6 +47,7 @@ class User(db.Model):
             'id': self.id,
             'username': self.username,
             'email': self.email,
+            'role': self.role,  # ← AGREGADO: Incluir role en respuesta
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
@@ -227,7 +229,7 @@ def login():
         
         return jsonify({
             'message': 'Login exitoso',
-            'user': user.to_dict()
+            'user': user.to_dict()  # Ahora incluye 'role'
         })
         
     except Exception as e:
@@ -238,12 +240,17 @@ def login():
 def check_user(username):
     """Verificar si un usuario existe"""
     user = User.query.filter_by(username=username).first()
-    return jsonify({'exists': user is not None})
+    if user:
+        return jsonify({
+            'exists': True,
+            'user': user.to_dict()
+        })
+    return jsonify({'exists': False}), 404
 
 
 @app.route('/api/users', methods=['GET'])
 def list_users():
-    """Listar todos los usuarios (solo para debug)"""
+    """Listar todos los usuarios (solo para desarrollo/debug)"""
     users = User.query.all()
     return jsonify({
         'count': len(users),
@@ -252,36 +259,29 @@ def list_users():
 
 
 # =============================================================================
-# ENDPOINTS DE INCIDENCIAS (NUEVOS - 50% RESTANTE)
+# ENDPOINTS DE INCIDENCIAS (NUEVO - 50% RESTANTE)
 # =============================================================================
 
 @app.route('/api/incidents', methods=['GET'])
 def list_incidents():
-    """Listar todas las incidencias con filtros opcionales"""
+    """Listar incidencias con filtros opcionales"""
     try:
-        # Parámetros de filtro
-        status_id = request.args.get('status_id', type=int)
-        priority_id = request.args.get('priority_id', type=int)
+        # Obtener parámetros de consulta
         username = request.args.get('username')
-        search = request.args.get('search')
+        status_id = request.args.get('status_id')
+        priority_id = request.args.get('priority_id')
         
-        # Query base
+        # Construir query
         query = Incident.query
         
-        # Aplicar filtros
-        if status_id:
-            query = query.filter_by(status_id=status_id)
-        if priority_id:
-            query = query.filter_by(priority_id=priority_id)
         if username:
             query = query.filter_by(username=username)
-        if search:
-            query = query.filter(
-                (Incident.title.ilike(f'%{search}%')) |
-                (Incident.description.ilike(f'%{search}%'))
-            )
+        if status_id:
+            query = query.filter_by(status_id=int(status_id))
+        if priority_id:
+            query = query.filter_by(priority_id=int(priority_id))
         
-        # Ordenar por fecha de creación (más reciente primero)
+        # Ordenar por fecha de creación (más recientes primero)
         incidents = query.order_by(Incident.created_at.desc()).all()
         
         return jsonify({
