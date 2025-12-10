@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas - Sistema IT</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="dashboard.html">
+                <i class="bi bi-wrench-adjustable"></i> Sistema de Incidencias IT
+            </a>
+            <div class="d-flex align-items-center">
+                <span class="navbar-text text-white me-3">
+                    <i class="bi bi-person-circle"></i> 
+                    <strong id="currentUsername"></strong>
+                    <small id="userRoleBadge" class="badge bg-light text-dark ms-2"></small>
+                </span>
+                <button class="btn btn-outline-light btn-sm" onclick="logout()">
+                    <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <div class="container-fluid mt-4">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="dashboard.html" class="text-decoration-none">Dashboard</a></li>
+                <li class="breadcrumb-item active">Estadísticas</li>
+            </ol>
+        </nav>
+
+        <!-- Título -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h2 class="text-white">
+                    <i class="bi bi-bar-chart-fill"></i> Estadísticas del Sistema
+                </h2>
+                <p class="text-white-50">Análisis general de incidencias IT</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="dashboard.html" class="btn btn-outline-light">
+                    <i class="bi bi-arrow-left"></i> Volver al Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Tarjetas de resumen -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white shadow-lg">
+                    <div class="card-body text-center">
+                        <i class="bi bi-clipboard-data" style="font-size: 3rem;"></i>
+                        <h3 class="mt-3 mb-0" id="totalIncidents">0</h3>
+                        <p class="mb-0">Total Incidencias</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-dark shadow-lg">
+                    <div class="card-body text-center">
+                        <i class="bi bi-exclamation-circle" style="font-size: 3rem;"></i>
+                        <h3 class="mt-3 mb-0" id="openIncidents">0</h3>
+                        <p class="mb-0">Abiertas</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white shadow-lg">
+                    <div class="card-body text-center">
+                        <i class="bi bi-hourglass-split" style="font-size: 3rem;"></i>
+                        <h3 class="mt-3 mb-0" id="inProgressIncidents">0</h3>
+                        <p class="mb-0">En Progreso</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white shadow-lg">
+                    <div class="card-body text-center">
+                        <i class="bi bi-check-circle" style="font-size: 3rem;"></i>
+                        <h3 class="mt-3 mb-0" id="resolvedIncidents">0</h3>
+                        <p class="mb-0">Resueltas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="row mb-4">
+            <!-- Gráfico de Estados (Pie Chart) -->
+            <div class="col-md-6">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-pie-chart-fill"></i> Incidencias por Estado
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="statusChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico de Prioridades (Bar Chart) -->
+            <div class="col-md-6">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-bar-chart-fill"></i> Incidencias por Prioridad
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="priorityChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tablas detalladas -->
+        <div class="row mb-4">
+            <!-- Tabla de Estados -->
+            <div class="col-md-6">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-table"></i> Desglose por Estado
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Estado</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-end">Porcentaje</th>
+                                </tr>
+                            </thead>
+                            <tbody id="statusTableBody">
+                                <tr>
+                                    <td colspan="3" class="text-center">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">Cargando...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Prioridades -->
+            <div class="col-md-6">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-table"></i> Desglose por Prioridad
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Prioridad</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-end">Porcentaje</th>
+                                </tr>
+                            </thead>
+                            <tbody id="priorityTableBody">
+                                <tr>
+                                    <td colspan="3" class="text-center">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">Cargando...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Métricas adicionales -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-graph-up"></i> Métricas de Rendimiento
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <div class="border-end">
+                                    <h4 class="text-success" id="resolutionRate">0%</h4>
+                                    <p class="text-muted mb-0">Tasa de Resolución</p>
+                                    <small class="text-muted">Incidencias resueltas del total</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="border-end">
+                                    <h4 class="text-info" id="inProgressRate">0%</h4>
+                                    <p class="text-muted mb-0">En Progreso</p>
+                                    <small class="text-muted">Incidencias siendo atendidas</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <h4 class="text-warning" id="pendingRate">0%</h4>
+                                <p class="text-muted mb-0">Pendientes</p>
+                                <small class="text-muted">Incidencias sin atender</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Barra de progreso visual -->
+                        <div class="mt-4">
+                            <div class="progress" style="height: 30px;">
+                                <div id="resolvedBar" class="progress-bar bg-success" role="progressbar" style="width: 0%">
+                                    <span id="resolvedBarText">0%</span>
+                                </div>
+                                <div id="inProgressBar" class="progress-bar bg-info" role="progressbar" style="width: 0%">
+                                    <span id="inProgressBarText">0%</span>
+                                </div>
+                                <div id="openBar" class="progress-bar bg-warning" role="progressbar" style="width: 0%">
+                                    <span id="openBarText">0%</span>
+                                </div>
+                            </div>
+                            <div class="mt-2 d-flex justify-content-between">
+                                <small class="text-muted">
+                                    <span class="badge bg-success">■</span> Resueltas
+                                </small>
+                                <small class="text-muted">
+                                    <span class="badge bg-info">■</span> En Progreso
+                                </small>
+                                <small class="text-muted">
+                                    <span class="badge bg-warning">■</span> Abiertas
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Última actualización -->
+        <div class="row mb-4">
+            <div class="col-md-12 text-center">
+                <p class="text-white-50">
+                    <i class="bi bi-clock-history"></i> 
+                    Última actualización: <span id="lastUpdate">--</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Verificar autenticación
+        const currentUser = checkAuth();
+        const userRole = localStorage.getItem('userRole') || 'user';
+        
+        if (currentUser) {
+            document.getElementById('currentUsername').textContent = currentUser;
+            document.getElementById('userRoleBadge').textContent = 
+                userRole === 'admin' ? 'Administrador' : 'Usuario';
+        }
+
+        let statusChart = null;
+        let priorityChart = null;
+
+        // Cargar estadísticas
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_AUTH_URL}/incidents/stats`);
+                if (!response.ok) throw new Error('Error al cargar estadísticas');
+                
+                const data = await response.json();
+                
+                console.log('📊 Estadísticas cargadas:', data);
+                
+                // Actualizar tarjetas de resumen
+                document.getElementById('totalIncidents').textContent = data.total;
+                
+                // Contadores por estado
+                let open = 0, inProgress = 0, resolved = 0, closed = 0;
+                
+                data.by_status.forEach(status => {
+                    if (status.name === 'Abierto') open = status.count;
+                    else if (status.name === 'En Progreso') inProgress = status.count;
+                    else if (status.name === 'Resuelto') resolved = status.count;
+                    else if (status.name === 'Cerrado') closed = status.count;
+                });
+                
+                document.getElementById('openIncidents').textContent = open;
+                document.getElementById('inProgressIncidents').textContent = inProgress;
+                document.getElementById('resolvedIncidents').textContent = resolved;
+                
+                // Calcular porcentajes
+                if (data.total > 0) {
+                    const resolvedRate = ((resolved / data.total) * 100).toFixed(1);
+                    const inProgressRate = ((inProgress / data.total) * 100).toFixed(1);
+                    const openRate = ((open / data.total) * 100).toFixed(1);
+                    
+                    document.getElementById('resolutionRate').textContent = resolvedRate + '%';
+                    document.getElementById('inProgressRate').textContent = inProgressRate + '%';
+                    document.getElementById('pendingRate').textContent = openRate + '%';
+                    
+                    // Barra de progreso
+                    document.getElementById('resolvedBar').style.width = resolvedRate + '%';
+                    document.getElementById('resolvedBarText').textContent = resolvedRate + '%';
+                    
+                    document.getElementById('inProgressBar').style.width = inProgressRate + '%';
+                    document.getElementById('inProgressBarText').textContent = inProgressRate + '%';
+                    
+                    document.getElementById('openBar').style.width = openRate + '%';
+                    document.getElementById('openBarText').textContent = openRate + '%';
+                }
+                
+                // Crear gráficos
+                createStatusChart(data.by_status);
+                createPriorityChart(data.by_priority);
+                
+                // Llenar tablas
+                fillStatusTable(data.by_status, data.total);
+                fillPriorityTable(data.by_priority, data.total);
+                
+                // Última actualización
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                alert('Error al cargar estadísticas: ' + error.message);
+            }
+        }
+
+        // Crear gráfico de estados (Pie Chart)
+        function createStatusChart(statusData) {
+            const ctx = document.getElementById('statusChart').getContext('2d');
+            
+            // Destruir gráfico anterior si existe
+            if (statusChart) statusChart.destroy();
+            
+            const labels = statusData.map(s => s.name);
+            const values = statusData.map(s => s.count);
+            const colors = ['#ffc107', '#0dcaf0', '#198754', '#6c757d'];
+            
+            statusChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: { size: 14 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Crear gráfico de prioridades (Bar Chart)
+        function createPriorityChart(priorityData) {
+            const ctx = document.getElementById('priorityChart').getContext('2d');
+            
+            // Destruir gráfico anterior si existe
+            if (priorityChart) priorityChart.destroy();
+            
+            const labels = priorityData.map(p => p.name);
+            const values = priorityData.map(p => p.count);
+            const colors = ['#6c757d', '#0d6efd', '#ffc107', '#dc3545'];
+            
+            priorityChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Cantidad de Incidencias',
+                        data: values,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                font: { size: 12 }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: { size: 14 }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Cantidad: ${context.parsed.y}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Llenar tabla de estados
+        function fillStatusTable(statusData, total) {
+            const tbody = document.getElementById('statusTableBody');
+            tbody.innerHTML = '';
+            
+            statusData.forEach(status => {
+                const percentage = total > 0 ? ((status.count / total) * 100).toFixed(1) : 0;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${status.name}</strong></td>
+                    <td class="text-center"><span class="badge bg-primary">${status.count}</span></td>
+                    <td class="text-end">${percentage}%</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Llenar tabla de prioridades
+        function fillPriorityTable(priorityData, total) {
+            const tbody = document.getElementById('priorityTableBody');
+            tbody.innerHTML = '';
+            
+            priorityData.forEach(priority => {
+                const percentage = total > 0 ? ((priority.count / total) * 100).toFixed(1) : 0;
+                
+                const badgeColor = {
+                    'Baja': 'secondary',
+                    'Media': 'primary',
+                    'Alta': 'warning',
+                    'Crítica': 'danger'
+                }[priority.name] || 'secondary';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${priority.name}</strong></td>
+                    <td class="text-center"><span class="badge bg-${badgeColor}">${priority.count}</span></td>
+                    <td class="text-end">${percentage}%</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+        });
+    </script>
+</body>
+</html>
